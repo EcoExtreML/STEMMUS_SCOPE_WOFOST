@@ -30,7 +30,7 @@ lambda_w = (lambda_s^(1-phis))*lambda_wtr^(phis);
 
 lambdas = ke*(lambda_w - lambda_d) + lambda_d;
 
-Hcs = 1.25*10^6; % heat capacity of soil   2.0*10^6 J m-3 K-1 = Bulk density (1.4 g/cm3) * specific heat of soil (1.0 J g-1 K-1) eq 13
+Hcs = 2.0*10^6; % heat capacity of soil   2.0*10^6 J m-3 K-1 = Bulk density (1.4 g/cm3) * specific heat of soil (1.0 J g-1 K-1) eq 13
 Hcw = 4.2*10^6; % heat capacity of water  J m-3 K-1
 
 Hc = (Hcw * SMC)+ (1-theta_s)*Hcs;

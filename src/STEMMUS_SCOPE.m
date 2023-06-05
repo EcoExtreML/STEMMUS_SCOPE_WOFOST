@@ -23,53 +23,59 @@
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 %% 0. globals
-% % We replaced the filereads (old) script with a function named prepareForcingData, see issue #86,
-% % but there still global variables here, because we not sure which
-% % progresses related to these global variables.
-% 
-% % Read the configPath file. Due to using MATLAB compiler, we cannot use run(CFG)
-% % global CFG
-% % if isempty(CFG)
-% %     CFG = '../config_file_crib.txt';
-% % end
-% % disp (['Reading config from ',CFG])
-% % [DataPaths.soilProperty, DataPaths.input, DataPaths.output, ...
-% %     DataPaths.forcingPath, forcingFileName, numberOfTimeSteps, ...
-% %     DataPaths.initialCondition] = io.read_config(CFG);
-% 
-% % Prepare forcing data
-% global IGBP_veg_long latitude longitude reference_height canopy_height sitename DELT Dur_tot
-% [SiteProperties, DELT, forcingTimeLength] = io.prepareForcingData(DataPaths, forcingFileName);
-% SoilPropertyPath     = DataPaths.soilProperty;
-% InputPath            = DataPaths.input;
-% OutputPath           = DataPaths.output;
-% InitialConditionPath = DataPaths.initialCondition;
-% IGBP_veg_long        = SiteProperties.igbpVegLong;
-% latitude             = SiteProperties.latitude;
-% longitude            = SiteProperties.longitude;
-% reference_height     = SiteProperties.referenceHeight;
-% canopy_height        = SiteProperties.canopyHeight;
-% sitename             = SiteProperties.siteName;
-% 
-% %Set the end time of the main loop in STEMMUS_SCOPE.m
-% %using config file or time length of forcing file
-% if isnan(numberOfTimeSteps)
-%     Dur_tot=forcingTimeLength;
-% else
-%     Dur_tot = min(numberOfTimeSteps, forcingTimeLength);
-% end
+% We replaced the filereads (old) script with a function named prepareForcingData, see issue #86,
+% but there still global variables here, because we not sure which
+% progresses related to these global variables.
 
-global latitude longitude  sitename DELT Dur_tot InputPath OutputPath 
-InputPath            = '../../input/';
-OutputPath           = '../../output/';
+% 'Local' or 'Crib', judge the computer platform is on your local computer or crib
+global computerPlatform
+computerPlatform = 'Crib';
 
-DELT = 30*60;
-Dur_tot=4992;
+% Read the configPath file. Due to using MATLAB compiler, we cannot use run(CFG)
+if computerPlatform == 'Crib'
+    global CFG
+    if isempty(CFG)
+        CFG = '../config_file_crib.txt';
+    end
+    disp (['Reading config from ',CFG])
+    [DataPaths.soilProperty, DataPaths.input, DataPaths.output, ...
+        DataPaths.forcingPath, forcingFileName, numberOfTimeSteps, ...
+        DataPaths.initialCondition] = io.read_config(CFG);
 
-latitude             = 36.83;
-longitude            = 116.57;
-sitename             = 'Yucheng';        
+    % Prepare forcing data
+    global IGBP_veg_long latitude longitude reference_height canopy_height sitename DELT Dur_tot
+    [SiteProperties, DELT, forcingTimeLength] = io.prepareForcingData(DataPaths, forcingFileName);
+    SoilPropertyPath     = DataPaths.soilProperty;
+    InputPath            = DataPaths.input;
+    OutputPath           = DataPaths.output;
+    InitialConditionPath = DataPaths.initialCondition;
+    IGBP_veg_long        = SiteProperties.igbpVegLong;
+    latitude             = SiteProperties.latitude;
+    longitude            = SiteProperties.longitude;
+    reference_height     = SiteProperties.referenceHeight;
+    canopy_height        = SiteProperties.canopyHeight;
+    sitename             = SiteProperties.siteName;
 
+    %Set the end time of the main loop in STEMMUS_SCOPE.m
+    %using config file or time length of forcing file
+    if isnan(numberOfTimeSteps)
+        Dur_tot=forcingTimeLength;
+    else
+        Dur_tot = min(numberOfTimeSteps, forcingTimeLength);
+    end
+    
+elseif computerPlatform == 'Local'
+    global latitude longitude  sitename DELT Dur_tot InputPath OutputPath 
+    InputPath            = '../../input/';
+    OutputPath           = '../../output/';
+
+    DELT = 30*60;
+    Dur_tot=4992;
+
+    latitude             = 36.83;
+    longitude            = 116.57;
+    sitename             = 'Yucheng';        
+end
 %%
 run Constants %input soil parameters
 global i tS KT Delt_t TEND TIME MN NN NL ML ND hOLD TOLD h hh T TT P_gOLD P_g P_gg Delt_t0 g
@@ -105,7 +111,11 @@ global HR Precip Precipp Tss frac sfactortot sfactor fluxes lEstot lEctot NoTime
 
 %% 1. define constants
 [constants] = io.define_constants();
-[Rl] = Initial_root_biomass_single(RTB,DeltZ_R,rroot,ML);
+if computerPlatform == 'Crib'
+    [Rl] = Initial_root_biomass(RTB,DeltZ_R,rroot,ML);
+else
+    [Rl] = Initial_root_biomass_single(RTB,DeltZ_R,rroot,ML);
+end
 %% 2. simulation options
 path_input = InputPath;          % path of all inputs
 path_of_code                = cd;
@@ -221,121 +231,125 @@ for i = 1:length(V)
         end
     end
 end
-% V(48).Val=latitude;
-% V(49).Val=longitude;
-% V(62).Val=latitude;
-% V(63).Val=longitude;
-% V(29).Val=reference_height;
-% V(23).Val=canopy_height;
-% V(55).Val=mean(Ta_msr);
-%Input T parameters for different vegetation type
-%     sitename1=cellstr(sitename);
-% if strcmp(IGBP_veg_long(1:18)', 'Permanent Wetlands') 
-%     V(14).Val= [0.2 0.3 288 313 328]; % These are five parameters specifying the temperature response.
-%     V(9).Val= [120]; % Vcmax, maximum carboxylation capacity (at optimum temperature)
-%     V(10).Val= [9]; % Ball-Berry stomatal conductance parameter
-%     V(11).Val= [0]; % Photochemical pathway: 0=C3, 1=C4
-%     V(28).Val= [0.05]; % leaf width
-% elseif strcmp(IGBP_veg_long(1:19)', 'Evergreen Broadleaf')  
-%     V(14).Val= [0.2 0.3 283 311 328];
-%     V(9).Val= [80];
-%     V(10).Val= [9];
-%     V(11).Val= [0];
-%     V(28).Val= [0.05];
-% elseif strcmp(IGBP_veg_long(1:19)', 'Deciduous Broadleaf') 
-%     V(14).Val= [0.2 0.3 283 311 328];
-%     V(9).Val= [80];
-%     V(10).Val= [9];
-%     V(11).Val= [0];  
-%     V(28).Val= [0.05];
-% elseif strcmp(IGBP_veg_long(1:13)', 'Mixed Forests') 
-%     V(14).Val= [0.2 0.3 281 307 328];
-%     V(9).Val= [80];
-%     V(10).Val= [9];
-%     V(11).Val= [0]; 
-%     V(28).Val= [0.04];
-% elseif strcmp(IGBP_veg_long(1:20)', 'Evergreen Needleleaf') 
-%     V(14).Val= [0.2 0.3 278 303 328];
-%     V(9).Val= [80];
-%     V(10).Val= [9];
-%     V(11).Val= [0];   
-%     V(28).Val= [0.01];
-% elseif strcmp(IGBP_veg_long(1:9)', 'Croplands')    
-%     if isequal(sitename1,{'ES-ES2'})||isequal(sitename1,{'FR-Gri'})||isequal(sitename1,{'US-ARM'})||isequal(sitename1,{'US-Ne1'})
-%         V(14).Val= [0.2 0.3 278 303 328];
-%         V(9).Val= [50];
-%         V(10).Val= [4];
-%         V(11).Val= [1]; 
-%         V(13).Val= [0.025]; % Respiration = Rdparam*Vcmcax
-%         V(28).Val= [0.03];
-%     else 
-%         V(14).Val= [0.2 0.3 278 303 328];
-%         V(9).Val= [120];
-%         V(10).Val= [9];
-%         V(11).Val= [0]; 
-%         V(28).Val= [0.03];    
-%     end
-% elseif strcmp(IGBP_veg_long(1:15)', 'Open Shrublands')
-%     V(14).Val= [0.2 0.3 288 313 328];
-%     V(9).Val= [120];
-%     V(10).Val= [9];
-%     V(11).Val= [0];  
-%     V(28).Val= [0.05];
-% elseif strcmp(IGBP_veg_long(1:17)', 'Closed Shrublands') 
-%     V(14).Val= [0.2 0.3 288 313 328];
-%     V(9).Val= [80];
-%     V(10).Val= [9];
-%     V(11).Val= [0];
-%     V(28).Val= [0.05];
-% elseif strcmp(IGBP_veg_long(1:8)', 'Savannas')  
-%     V(14).Val= [0.2 0.3 278 313 328];
-%     V(9).Val= [120];
-%     V(10).Val= [9];
-%     V(11).Val= [0];
-%     V(28).Val= [0.05];
-% elseif strcmp(IGBP_veg_long(1:14)', 'Woody Savannas')
-%     V(14).Val= [0.2 0.3 278 313 328];
-%     V(9).Val= [120];
-%     V(10).Val= [9];
-%     V(11).Val= [0];
-%     V(28).Val= [0.03];
-% elseif strcmp(IGBP_veg_long(1:9)', 'Grassland')  
-%     V(14).Val= [0.2 0.3 288 303 328];
-%     if isequal(sitename1,{'AR-SLu'})||isequal(sitename1,{'AU-Ync'})||isequal(sitename1,{'CH-Oe1'})||isequal(sitename1,{'DK-Lva'})||isequal(sitename1,{'US-AR1'})||isequal(sitename1,{'US-AR2'})||isequal(sitename1,{'US-Aud'})||isequal(sitename1,{'US-SRG'})
-%         V(9).Val= [120];
-%         V(10).Val= [4];
-%         V(11).Val= [1];
-%         V(13).Val= [0.025]; 
-%     else
-%         V(9).Val= [120];
-%         V(10).Val= [9];
-%         V(11).Val= [0];
-%     end
-%     V(28).Val= [0.02];
-% else
-%     V(14).Val= [0.2 0.3 288 313 328];
-%     V(9).Val= [80];
-%     V(10).Val= [9];
-%     V(11).Val= [0];
-%     V(28).Val= [0.05];
-%     warning('IGBP vegetation name unknown, "%s" is not recognized. ', IGBP_veg_long)
-% end
-% 
-% TZ=fix(longitude/15);
-% TZZ=mod(longitude,15);
-% if longitude>0
-%     if abs(TZZ)>7.5
-%         V(50).Val= TZ+1;
-%     else
-%         V(50).Val= TZ;
-%     end
-% else
-%     if abs(TZZ)>7.5
-%         V(50).Val= TZ-1;
-%     else
-%         V(50).Val= TZ;
-%     end
-% end
+
+if computerPlatform == 'Crib'
+    V(48).Val=latitude;
+    V(49).Val=longitude;
+    V(62).Val=latitude;
+    V(63).Val=longitude;
+    V(29).Val=reference_height;
+    V(23).Val=canopy_height;
+    V(55).Val=mean(Ta_msr);
+%     Input T parameters for different vegetation type
+        sitename1=cellstr(sitename);
+    if strcmp(IGBP_veg_long(1:18)', 'Permanent Wetlands') 
+        V(14).Val= [0.2 0.3 288 313 328]; % These are five parameters specifying the temperature response.
+        V(9).Val= [120]; % Vcmax, maximum carboxylation capacity (at optimum temperature)
+        V(10).Val= [9]; % Ball-Berry stomatal conductance parameter
+        V(11).Val= [0]; % Photochemical pathway: 0=C3, 1=C4
+        V(28).Val= [0.05]; % leaf width
+    elseif strcmp(IGBP_veg_long(1:19)', 'Evergreen Broadleaf')  
+        V(14).Val= [0.2 0.3 283 311 328];
+        V(9).Val= [80];
+        V(10).Val= [9];
+        V(11).Val= [0];
+        V(28).Val= [0.05];
+    elseif strcmp(IGBP_veg_long(1:19)', 'Deciduous Broadleaf') 
+        V(14).Val= [0.2 0.3 283 311 328];
+        V(9).Val= [80];
+        V(10).Val= [9];
+        V(11).Val= [0];  
+        V(28).Val= [0.05];
+    elseif strcmp(IGBP_veg_long(1:13)', 'Mixed Forests') 
+        V(14).Val= [0.2 0.3 281 307 328];
+        V(9).Val= [80];
+        V(10).Val= [9];
+        V(11).Val= [0]; 
+        V(28).Val= [0.04];
+    elseif strcmp(IGBP_veg_long(1:20)', 'Evergreen Needleleaf') 
+        V(14).Val= [0.2 0.3 278 303 328];
+        V(9).Val= [80];
+        V(10).Val= [9];
+        V(11).Val= [0];   
+        V(28).Val= [0.01];
+    elseif strcmp(IGBP_veg_long(1:9)', 'Croplands')    
+        if isequal(sitename1,{'ES-ES2'})||isequal(sitename1,{'FR-Gri'})||isequal(sitename1,{'US-ARM'})||isequal(sitename1,{'US-Ne1'})
+            V(14).Val= [0.2 0.3 278 303 328];
+            V(9).Val= [50];
+            V(10).Val= [4];
+            V(11).Val= [1]; 
+            V(13).Val= [0.025]; % Respiration = Rdparam*Vcmcax
+            V(28).Val= [0.03];
+        else 
+            V(14).Val= [0.2 0.3 278 303 328];
+            V(9).Val= [120];
+            V(10).Val= [9];
+            V(11).Val= [0]; 
+            V(28).Val= [0.03];    
+        end
+    elseif strcmp(IGBP_veg_long(1:15)', 'Open Shrublands')
+        V(14).Val= [0.2 0.3 288 313 328];
+        V(9).Val= [120];
+        V(10).Val= [9];
+        V(11).Val= [0];  
+        V(28).Val= [0.05];
+    elseif strcmp(IGBP_veg_long(1:17)', 'Closed Shrublands') 
+        V(14).Val= [0.2 0.3 288 313 328];
+        V(9).Val= [80];
+        V(10).Val= [9];
+        V(11).Val= [0];
+        V(28).Val= [0.05];
+    elseif strcmp(IGBP_veg_long(1:8)', 'Savannas')  
+        V(14).Val= [0.2 0.3 278 313 328];
+        V(9).Val= [120];
+        V(10).Val= [9];
+        V(11).Val= [0];
+        V(28).Val= [0.05];
+    elseif strcmp(IGBP_veg_long(1:14)', 'Woody Savannas')
+        V(14).Val= [0.2 0.3 278 313 328];
+        V(9).Val= [120];
+        V(10).Val= [9];
+        V(11).Val= [0];
+        V(28).Val= [0.03];
+    elseif strcmp(IGBP_veg_long(1:9)', 'Grassland')  
+        V(14).Val= [0.2 0.3 288 303 328];
+        if isequal(sitename1,{'AR-SLu'})||isequal(sitename1,{'AU-Ync'})||isequal(sitename1,{'CH-Oe1'})||isequal(sitename1,{'DK-Lva'})||isequal(sitename1,{'US-AR1'})||isequal(sitename1,{'US-AR2'})||isequal(sitename1,{'US-Aud'})||isequal(sitename1,{'US-SRG'})
+            V(9).Val= [120];
+            V(10).Val= [4];
+            V(11).Val= [1];
+            V(13).Val= [0.025]; 
+        else
+            V(9).Val= [120];
+            V(10).Val= [9];
+            V(11).Val= [0];
+        end
+        V(28).Val= [0.02];
+    else
+        V(14).Val= [0.2 0.3 288 313 328];
+        V(9).Val= [80];
+        V(10).Val= [9];
+        V(11).Val= [0];
+        V(28).Val= [0.05];
+        warning('IGBP vegetation name unknown, "%s" is not recognized. ', IGBP_veg_long)
+    end
+
+    TZ=fix(longitude/15);
+    TZZ=mod(longitude,15);
+    if longitude>0
+        if abs(TZZ)>7.5
+            V(50).Val= TZ+1;
+        else
+            V(50).Val= TZ;
+        end
+    else
+        if abs(TZZ)>7.5
+            V(50).Val= TZ-1;
+        else
+            V(50).Val= TZ;
+        end
+    end
+end
+
 %% 5. Declare paths
 path_input      = InputPath;          % path of all inputs
 path_output     = OutputPath;
@@ -392,7 +406,7 @@ spectral.IwlF = (640:850)-399;
 [rho,tau,rs] = deal(zeros(nwlP + nwlT,1));
 
 %% 11. Define crop growth parameters
-% Dur_tot = 8784;
+Dur_tot = 9000;
 options.calc_vegetation_dynamic = 1;
 
 wofostpar = wofost.WofostRead();
@@ -522,10 +536,10 @@ for i = 1:1:Dur_tot
     if options.calc_vegetation_dynamic == 1  &&  KT >= wofostpar.CSTART && KT <= wofostpar.CEND   
         if KT == wofostpar.CSTART
             V(22).Val(KT)  = max(wofostpar.LAIEM,V(22).Val(KT));  % initial LAI
-            V(23).Val(KT)  = max(wofostpar.PHEM,V(23).Val(KT));            % initial PH
+%             V(23).Val(KT)  = max(wofostpar.PHEM,V(23).Val(KT));            % initial PH
         elseif KT > wofostpar.CSTART 
             V(22).Val(KT)  = crop_output(KT-1,3);   % substitute LAI
-            V(23).Val(KT)  = crop_output(KT-1,4);            % substitute PH
+%             V(23).Val(KT)  = crop_output(KT-1,4);            % substitute PH
         end
     end   
     

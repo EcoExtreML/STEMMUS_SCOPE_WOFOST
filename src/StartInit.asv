@@ -1,6 +1,6 @@
 function StartInit
 
-global InitND1 InitND2 InitND3 InitND4 InitND5 BtmT BtmX Btmh InitND6 computerPlatform% Preset the measured depth to get the initial T, h by interpolation method.
+global InitND1 InitND2 InitND3 InitND4 InitND5 BtmT BtmX Btmh InitND6% Preset the measured depth to get the initial T, h by interpolation method.
 global InitT0 InitT1 InitT2 InitT3 InitT4 InitT5 InitT6 Dmark
 global T MN ML NL NN DeltZ Elmn_Lnth Tot_Depth InitLnth
 global InitX0 InitX1 InitX2 InitX3 InitX4 InitX5 InitX6 Inith0 Inith1 Inith2 Inith3 Inith4 Inith5 Inith6

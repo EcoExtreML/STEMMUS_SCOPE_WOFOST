@@ -27,11 +27,11 @@ hERR=0.1e08;               % Maximum desirable change of matric potential;
 TERR=2;                      % Maximum desirable change of temperature;                
 PERR=5000;                  % Maximum desirable change of soil air pressure (Pa,kg.m^-1.s^-1);
 uERR=0.02;                  % Maximum desirable change of total water content;                                                                    
-Tot_Depth=500;           % Unit is cm. it should be usually bigger than 0.5m. Otherwise, 
+Tot_Depth=100;           % Unit is cm. it should be usually bigger than 0.5m. Otherwise, 
                                  % the DeltZ would be reset in 50cm by hand;                                  
-R_depth=300; %                                                                               
+R_depth=60; %                                                                               
 Eqlspace=0;                 % Indicator for deciding is the space step equal or not;       
-NL=100;
+NL=50;
 if ~Eqlspace                                                                     
    run Dtrmn_Z              % Determination of NL, the number of elments;              
 else
@@ -451,16 +451,9 @@ Ts_msr=Mdata(:,2)';
 Precip_msr=Mdata(:,6)'*10*DELT;   
 Tmin=min(Ts_msr);
 % Precip_msr=Precip_msr.*(1-fmax.*exp(-0.5*0.5*Tot_Depth/100));
-
-if computerPlatform == 'Crib' 
-    % load initial soil moisture and soil temperature from ERA5
-    Initial_path=dir(fullfile(InitialConditionPath,[sitename,'*.nc']));
-    InitND1=5;    % Unit of it is cm. These variables are used to indicated the depth corresponding to the measurement.
-    InitND2=15;
-    InitND3=60;
-    InitND4=100;
-    InitND5=200;
-    InitND6=300;
+% % load initial soil moisture and soil temperature from ERA5
+% Initial_path=dir(fullfile(InitialConditionPath,[sitename,'*.nc']));
+if computerPlatform == 'Crib'    
     if SWCC==0  
         InitT0=	-1.762;  %-1.75estimated soil surface temperature-1.762
         InitT1=	-0.662;
@@ -479,7 +472,7 @@ if computerPlatform == 'Crib'
         InitX6=	0.078;
         BtmX=0.078;%0.078 0.05;    % The initial moisture content at the bottom of the column.
     else
-        InitT0= ncread([InitialConditionPath,Initial_path(1).name],'skt')-273.15;  %-1.75estimated soil surface temperature-1.762
+        InitT0=   ncread([InitialConditionPath,Initial_path(1).name],'skt')-273.15;  %-1.75estimated soil surface temperature-1.762
         InitT1=	ncread([InitialConditionPath,Initial_path(2).name],'stl1')-273.15;
         InitT2=	ncread([InitialConditionPath,Initial_path(3).name],'stl2')-273.15;
         InitT3=	ncread([InitialConditionPath,Initial_path(4).name],'stl3')-273.15;
@@ -564,4 +557,5 @@ elseif computerPlatform == 'Local'
         InitX6=	0.44;
         BtmX=0.44;%0.078 0.05;    % The initial moisture content at the bottom of the column.    
     end
+end
 end

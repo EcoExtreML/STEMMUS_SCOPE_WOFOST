@@ -127,8 +127,8 @@ rai = (z>zr).*(1./(kappa*ustar).*(log((z-d) /(zr-d))  - ph_z   + ph_zr));% W&V E
 rar = 1./(kappa*ustar).*((zr-h)/(zr-d)) 	 - phs_zr + phs_h;% W&V Eq 39
 rac = h*sinh(n)./(n*Kh)*(log((exp(n)-1)/(exp(n)+1)) - log((exp(n*(z0m+ d )/h)-1)/(exp(n*(z0m +d )/h)+1))); % W&V Eq 42
 rws = h*sinh(n)./(n*Kh)*(log((exp(n*(z0m+d)/h)-1)/(exp(n*(z0m+d)/h)+1)) - log((exp(n*(.01    )/h)-1)/(exp(n*(.01    )/h)+1))); % W&V Eq 43
-% rbc = 70/LAI * sqrt(w./uz0);						%		W&V Eq 31, but slightly different
-rbc = 200 * sqrt(w./uz0*(LAI/3.85));						% a = 100		W&V Eq 31, but slightly different, the leaf width is assume to be the function of LAI
+rbc = 70/LAI * sqrt(w./uz0);						%		W&V Eq 31, but slightly different
+%rbc = 200 * sqrt(w./uz0*(LAI/3.85));						% a = 100		W&V Eq 31, but slightly different, the leaf width is assume to be the function of LAI
 
 resist_out.rai = rai;
 resist_out.rar = rar;
