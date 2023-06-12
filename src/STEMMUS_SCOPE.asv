@@ -698,10 +698,10 @@ for i = 1:1:Dur_tot
         [crop_output] = wofost.cropgrowth(meteo,wofostpar,Anet,xyt);
              
          %% Adjust crop parameters for debugging process
-%         wofostpar = wofost.WofostRead();
-%         fluxname = '../../input/Wofost/fluxes.csv';
-%         cropname = '../../input/Wofost/LAI_.dat';
-%         [crop_output] = wofost.wofostdebug(wofostpar,V,xyt,fluxname,cropname);
+        wofostpar = wofost.WofostRead();
+        fluxname = '../../input/Wofost/fluxes.csv';
+        cropname = '../../input/Wofost/LAI_.dat';
+        [crop_output] = wofost.wofostdebug(wofostpar,V,xyt,fluxname,cropname);
 
     else
         crop_output(KT,1) = xyt.t(KT,1);             % Day of the year

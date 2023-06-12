@@ -151,11 +151,11 @@ Ks0=43.6748;
 
 fmax=0.4564;
 % soil property
-SaturatedK=[25   25   25   42   42   42]/(3600*24);%[2.67*1e-3  1.79*1e-3 1.14*1e-3 4.57*1e-4 2.72*1e-4];      %[2.3*1e-4  2.3*1e-4 0.94*1e-4 0.94*1e-4 0.68*1e-4] 0.18*1e-4Saturation hydraulic conductivity (cm.s^-1);
-SaturatedMC=[0.4500    0.4500    0.4500    0.4500    0.4500     0.4500];                              % 0.42 0.55 Saturated water content;
-ResidualMC=[0.090    0.090    0.090    0.090    0.085   0.085];                               %0.037 0.017 0.078 The residual water content of soil;
-Coefficient_n=[1.50    1.50    1.50    1.50    1.50    1.50];                            %1.2839 1.3519 1.2139 Coefficient in VG model;
-Coefficient_Alpha=[0.036    0.036    0.036    0.036    0.036    0.036];                   % 0.02958 0.007383 Coefficient in VG model;
-porosity =[0.4500    0.4500    0.4500    0.4500    0.4500     0.4500];                                      % Soil porosity;
-fieldMC = [0.28    0.28    0.28   0.28    0.28   0.28]; 
+SaturatedK=[4.7382  6.0719  3.2960  2.3233  2.4605  2.8647]/(3600*24);%[2.67*1e-3  1.79*1e-3 1.14*1e-3 4.57*1e-4 2.72*1e-4];      %[2.3*1e-4  2.3*1e-4 0.94*1e-4 0.94*1e-4 0.68*1e-4] 0.18*1e-4Saturation hydraulic conductivity (cm.s^-1);
+SaturatedMC=[0.3552    0.3597    0.3587    0.3511    0.3467     0.3457];                              % 0.42 0.55 Saturated water content;
+ResidualMC=[0.0571    0.0565    0.0629    0.0641    0.0614   0.0597];                               %0.037 0.017 0.078 The residual water content of soil;
+Coefficient_n=[1.3912    1.4411    1.3607    1.2593    1.2451    1.2575];                            %1.2839 1.3519 1.2139 Coefficient in VG model;
+Coefficient_Alpha=[0.0133    0.0122    0.0138    0.0181    0.0198    0.0197];                   % 0.02958 0.007383 Coefficient in VG model;
+porosity =[0.3552    0.3597    0.3587    0.3511    0.3467     0.3457];                                      % Soil porosity;
+fieldMC = [0.2166    0.2122    0.2270   0.2396    0.2371   0.2318]; 
 %fieldMC=(1./(((341.09.*Coefficient_Alpha).^(Coefficient_n)+1).^(1-1./Coefficient_n))).*(SaturatedMC-ResidualMC)+ResidualMC;   
