@@ -384,10 +384,10 @@ ThermCond=1;      % The indicator for choosing effective thermal conductivity me
 CHST=0;            % Indicator of parameters derivation using soil texture or not. CHST=1, use; CHST=0 not use
 ISOC=1;            % Indicator of considering soil organic matter effect or not. ISOC=1, yes; ISOC=0 no
 %%%%% 172   27%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if computerPlatform == 'Crib'
-    run soilpropertyread
+if any(strcmp(computerPlatform, {'Local', 'CribLocal'}))
+    run soilpropertyread_single
 else
-    run soilpropertyread_single %load soil property
+    run soilpropertyread %load soil property from local computer
 end
 CKTN=(50+2.575*20);                                     % Constant used in calculating viscosity factor for hydraulic conductivity
 l=0.5;                                                           % Coefficient in VG model;
@@ -452,7 +452,10 @@ Precip_msr=Mdata(:,6)'*10*DELT;
 Tmin=min(Ts_msr);
 % Precip_msr=Precip_msr.*(1-fmax.*exp(-0.5*0.5*Tot_Depth/100));
 
-if computerPlatform == 'Crib' 
+if any(strcmp(computerPlatform, {'Crib', 'CribLocal'}))
+    % take the runoff into the consideration
+    Precip_msr=Precip_msr.*(1-fmax.*exp(-0.5*0.5*Tot_Depth/100));
+
     % load initial soil moisture and soil temperature from ERA5
     Initial_path=dir(fullfile(InitialConditionPath,[sitename,'*.nc']));
     InitND1=5;    % Unit of it is cm. These variables are used to indicated the depth corresponding to the measurement.
@@ -497,10 +500,10 @@ if computerPlatform == 'Crib'
           InitT6=	0;
           Tss = InitT0;
         end
-        if nanmean(Ta_msr)<0
+        if mean(Ta_msr,'omitnan')<0
             BtmT  = 0;  %9 8.1
         else
-            BtmT  =  nanmean(Ta_msr);
+            BtmT  =  mean(Ta_msr,'omitnan');
         end
         InitX0=	ncread([InitialConditionPath,Initial_path(6).name],'swvl1');  %0.0793
         InitX1=	ncread([InitialConditionPath,Initial_path(6).name],'swvl1'); % Measured soil liquid moisture content

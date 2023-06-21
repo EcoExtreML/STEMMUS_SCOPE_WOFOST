@@ -1,0 +1,7 @@
+SoilPropertyPath=/data/shared/EcoExtreML/STEMMUS_SCOPEv1.0.0/input/SoilProperty/
+InputPath=../../input/
+OutputPath=../../output/
+ForcingPath=../../input/Plumber2_data/
+ForcingFileName=US-Var_2001-2014_FLUXNET2015_Met.nc
+InitialConditionPath=../../input/Initial_condition/
+DurationSize=NA
