@@ -376,7 +376,7 @@ end
            Vs          = Vs_C3; % = (Vcmax25/2) .* exp(log(1.8).*qt);    % doesn't change on iteration.
            if any(g_m < Inf)
                % with g_m:
-               Vc = sel_root( 1./g_m, -(MM_consts + Ci +(Rd + Vcmax)./g_m), Vcmax.*(Ci - Gamma_star + Rd./g_m), -1);
+               Vc = sel_root( 1./g_m, -(MM_consts + Ci +(Rnfd + Vcmax)./g_m), Vcmax.*(Ci - Gamma_star + Rd./g_m), -1);
                Ve = sel_root( 1./g_m, -(Ci + 2*Gamma_star +(Rd + Je .* effcon)./g_m), Je .* effcon.*(Ci - Gamma_star + Rd./g_m), -1);
                CO2_per_electron = Ve ./ Je;
            else

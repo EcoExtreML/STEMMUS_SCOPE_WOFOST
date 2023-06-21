@@ -688,21 +688,22 @@ for i = 1:1:Dur_tot
         end           
     end
     
-    % start to simulate the vegetation growth process 
+    %% Adjust crop parameters for debugging process
+    wofostpar = wofost.WofostRead();
+    if wofostpar.PARSCHEME == 1
+        wofostpar = wofost.parameter_extract(wofostpar,V,F,path_input);
+    end
+
+   [crop_output] = wofost.wofostdebug(wofostpar,V,xyt,options);
+
+    %% start to simulate the vegetation growth process 
     if options.calc_vegetation_dynamic == 1  && KT >= wofostpar.CSTART && KT <= wofostpar.CEND          
         Anet = fluxes.Actot;
         if isnan(Anet) || Anet < -2                       % limit value of Anet
             Anet = 0;
             fluxes.Actot = Anet;
         end
-        [crop_output] = wofost.cropgrowth(meteo,wofostpar,Anet,xyt);
-             
-         %% Adjust crop parameters for debugging process
-%         wofostpar = wofost.WofostRead();
-%         fluxname = '../../input/Wofost/fluxes.csv';
-%         cropname = '../../input/Wofost/LAI_.dat';
-%         [crop_output] = wofost.wofostdebug(wofostpar,V,xyt,fluxname,cropname);
-
+        [crop_output] = wofost.cropgrowth(meteo,wofostpar,Anet,xyt);            
     else
         crop_output(KT,1) = xyt.t(KT,1);             % Day of the year
         crop_output(KT,3) = canopy.LAI;              % LAI
@@ -710,7 +711,7 @@ for i = 1:1:Dur_tot
         crop_output(KT,5) = sfactor;                 % Water stress
     end
 
-    
+    %%
     if options.simulation==2 && telmax>1, vi  = helpers.count(nvars,vi,vmax,1); end
      if KT==1 
         if isreal(fluxes.Actot)&&isreal(thermal.Tsave)&&isreal(fluxes.lEstot)&&isreal(fluxes.lEctot)

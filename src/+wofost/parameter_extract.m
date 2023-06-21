@@ -6,8 +6,16 @@ function [wofostpar] = parameter_extract(wofostpar,V,F,path_input)
 %                       TSUMAM  = Temperature sum from anthesis to maturity [oC]
 %                       LAIEM   = Initial LAI value
 
-%% 1. Load LAI and air temperature data
+%% 1. Load time, LAI and air temperature data
 Dataset_dir         = '';
+
+% load the time information
+t_file              = char(F(6).FileName);
+year_file           = char(F(7).FileName);
+doy                 = load([path_input,Dataset_dir,'/' ,t_file] );
+years               = load([path_input,Dataset_dir,'/',year_file]);
+
+% load LAI data
 LAI_file            = char(F(17).FileName);
 if  ~isempty(LAI_file)
     LAItable        = load([path_input,Dataset_dir,'/',LAI_file]);
@@ -15,6 +23,7 @@ else
     V(22).Val          = canopy.LAI*ones(size(time_));
 end
 
+% load air temperature data
 Ta_file             = char(F(11).FileName); 
 if ~isempty(Ta_file)%air temperature
     V(31).Val           = load([path_input,Dataset_dir,'/',Ta_file]);
@@ -23,8 +32,9 @@ else
 end
 
 %% 2. Smooth LAI time series using HANTS method
-ndata = length(LAItable(:,2));             % the total number of LAI data
-tday  = 1: (24/wofostpar.TSTEP): ndata;    % decrease the time step to day step 
+ndata = length(LAItable(:,2));      % the total number of LAI data
+NstepDay = 24/wofostpar.TSTEP;      % Number of tsteps on one day
+tday  = NstepDay: NstepDay: ndata;  % decrease the time step to day step 
 
 ni    = length(tday);               % total number of actual samples of the time series
 nb    = ni;                         % length of the base period, measured in virtual samples
@@ -93,47 +103,69 @@ min_indices(end+1) = group_start_index + min_index - 1;
 filtered_valleys = min_values; % Update the filtered vallyes and indices
 filtered_valley_indices = filtered_valley_indices(min_indices);
 
-%% 4. Determine the day for sensonal start and end
+%% 4. Calculate the tempurature sum for each day of year
+% Initialize an array to store the data of temperature sum
+cumulative_temperatures = [];
+
+% Calculate the temperature sum for each year
+unique_years = unique(years);
+for i = 1:numel(unique_years)
+    year = unique_years(i);
+    year_indices = find(years == year);
+
+    Ta_year = V(31).Val(year_indices);
+    cumulative_temperatures_year = cumsum(Ta_year)/NstepDay;
+    cumulative_temperatures = [cumulative_temperatures,cumulative_temperatures_year'];
+end
+
+%% 5. Determine the day for sensonal start and end
 % Set the percentage threshold for the value increase
-threshold_percentage = 0.4; % Adjust this value according to your needs
+threshold_percentage = wofostpar.THRESHOLD; % Adjust this value according to your needs
 
 % Initialize an array to store the indices that meet the threshold condition
-indices_valley_left  = [];
-indices_valley_right = [];
+indices_peak_left  = [];
+indices_peak_right = [];
+Lai_original = LAItable(tday,2); 
+
+% judge whether the valley index smaller than peak index at start
+if filtered_valley_indices(1) > filtered_peak_indices(1)
+   filtered_valley_indices = [1;filtered_valley_indices];
+end
+
+if filtered_valley_indices(end) < filtered_peak_indices(end)
+   filtered_valley_indices = [filtered_valley_indices;ts(end)];
+end
+filtered_valleys = lai_data(filtered_valley_indices);
 
 % Traverse the time indices and corresponding values
-for i = 1:length(filtered_valley_indices)
-    valley_index = filtered_valley_indices(i);
-    valley_value = lai_data(valley_index);
+for i = 1:length(filtered_peak_indices)
+    % determint the index and value of peaks and valleys
+    peak_index         = filtered_peak_indices(i);
+    peak_value         = Lai_original(peak_index);
+
+    valley_index_left  = filtered_valley_indices(i);
+    valley_index_right = filtered_valley_indices(i+1);
+    valley_value_left  = Lai_original(valley_index_left);
+    valley_value_right = Lai_original(valley_index_right);
 
     % Calculate the threshold value
-    threshold_value = valley_value * (1 + threshold_percentage);
-    
-    % Check if the value exceeds the threshold
-    above_threshold_indices = find(lai_data > threshold_value);
-    
-    % Add the indices which meet the threshold
-    indice_left  = above_threshold_indices(find(above_threshold_indices<valley_index));
-    indice_right = above_threshold_indices(find(above_threshold_indices>valley_index));
+    threshold_value_start = valley_value_left  + (peak_value-valley_value_left)*threshold_percentage;
+    threshold_value_end   = valley_value_right + (peak_value-valley_value_right)*threshold_percentage;
 
-    indices_valley_left  = [indices_valley_left,indice_left(end)];
-    indices_valley_right = [indices_valley_right,indice_right(1)];
+    % Determine the index that crop starts or ends to grow up 
+    lai_growth_seasion = Lai_original(valley_index_left:valley_index_right);
+    above_threshold_left  = find(lai_growth_seasion > threshold_value_start)+valley_index_left-1;
+    above_threshold_right = find(lai_growth_seasion > threshold_value_end)+valley_index_left-1;
+
+    indices_peak_left   = [indices_peak_left,above_threshold_left(1)];
+    indices_peak_right  = [indices_peak_right,above_threshold_right(end)];
 end
 
-% judge the start point whether lower than end point
-if indices_valley_right(1) > indices_valley_left(1)
-   indices_valley_right = [1,indices_valley_right];
-end
-
-if indices_valley_right(end) > indices_valley_left(end)
-   indices_valley_right = indices_valley_right(1:end-1);
-end
 
 %% 4. Update the crop parameters
 % retrieval to the hour steps
-NstepDay = 24/wofostpar.TSTEP; %Number of tsteps on one day
-CSTART = indices_valley_right*NstepDay;
-CEND   = indices_valley_left*NstepDay;
+CSTART = indices_peak_left*NstepDay;
+CEND   = indices_peak_right*NstepDay;
 PEAKS  = filtered_peak_indices*NstepDay;
 
 % calculate the effective temperature
@@ -159,15 +191,20 @@ wofostpar.TSUMAMSeries = TSUMAM;
 wofostpar.LAIEMSeries  = LAIEM;
 
 %% plotting
+ax1 = subplot(2,1,1);
 plot(y,'b.-');
 hold on;
 plot(yr,'g.-');
+
 scatter(filtered_peak_indices,filtered_peaks,'red','*'); 
 scatter(filtered_valley_indices,filtered_valleys,'black','*');
-
 scatter(CSTART/NstepDay,lai_data(CSTART/NstepDay),'red','s','filled');
 scatter(CEND/NstepDay,lai_data(CEND/NstepDay),'black','s','filled');
+ylabel('LAI (m^3/m^3)')
 
-legend('Original Data','HANTS Data','LAI Peaks','LAI Valleys','Start Point','End point')
+yyaxis right;
+plot(ts,cumulative_temperatures(tday),'red');
+legend('Original Data','HANTS Data','LAI Peaks','LAI Valleys','Start Point','End Point','Temperature Sum');
+ylabel('Cumulated temperature (^oC)')
 end
 
