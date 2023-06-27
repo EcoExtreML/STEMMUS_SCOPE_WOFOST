@@ -413,9 +413,11 @@ wofostpar = wofost.WofostRead();
 crop_output = zeros(Dur_tot,12);
 wofostpar.TSTEP = DELT/3600;   % make sure the consistent of the time step (hour)
 
-% chose parameter scheme to use the extracted parameters from LAI time series
+% chose parameter scheme to use the extracted parameters from LAI time series or based on temperature sum
 if wofostpar.PARSCHEME == 1
-    wofostpar = wofost.parameter_extract(wofostpar,V,F,path_input);
+    wofostpar = wofost.parameterExtract_LAI(wofostpar,V,F,path_input);
+elseif wofostpar.PARSCHEME == 2
+    wofostpar = wofost.parameterExtract_TemSum(wofostpar,V,F,path_input);
 end
 
 %% 12. load time series data
@@ -540,7 +542,7 @@ for i = 1:1:Dur_tot
     if options.simulation == 0, vi(vmax==telmax) = k; end
     
     % update the wofost parameters if using the extracted parameter from LAI time series
-    if wofostpar.PARSCHEME == 1
+    if wofostpar.PARSCHEME == 1 || wofostpar.PARSCHEME == 2
        if KT == 1
            nSeasions = 1;     % initilize crop growth seasions
            [wofostpar,nSeasions] = wofost.parameter_update(wofostpar,KT,nSeasions); % initilize crop growth parameters
@@ -689,12 +691,14 @@ for i = 1:1:Dur_tot
     end
     
     %% Adjust crop parameters for debugging process
-    wofostpar = wofost.WofostRead();
-    if wofostpar.PARSCHEME == 1
-        wofostpar = wofost.parameter_extract(wofostpar,V,F,path_input);
-    end
-
-   [crop_output] = wofost.wofostdebug(wofostpar,V,xyt,options);
+%     wofostpar = wofost.WofostRead();
+%     if wofostpar.PARSCHEME == 1
+%         wofostpar = wofost.parameterExtract_LAI(wofostpar,V,F,path_input);
+%     elseif wofostpar.PARSCHEME == 2
+%         wofostpar = wofost.parameterExtract_TemSum(wofostpar,V,F,path_input);
+%     end
+% 
+%    [crop_output] = wofost.wofostdebug(wofostpar,V,xyt,options);
 
     %% start to simulate the vegetation growth process 
     if options.calc_vegetation_dynamic == 1  && KT >= wofostpar.CSTART && KT <= wofostpar.CEND          

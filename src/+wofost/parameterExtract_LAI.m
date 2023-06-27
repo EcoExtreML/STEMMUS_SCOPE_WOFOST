@@ -1,4 +1,4 @@
-function [wofostpar] = parameter_extract(wofostpar,V,F,path_input)
+function [wofostpar] = parameterExtract_LAI(wofostpar,V,F,path_input)
 %   Extract wofost parameters from LAI time series (author: Danyang Yu)
 %   Extracted parameters: CSTART  = The start time of crop simulation 
 %                       CEND    = The end time of crop simulation
@@ -103,22 +103,8 @@ min_indices(end+1) = group_start_index + min_index - 1;
 filtered_valleys = min_values; % Update the filtered vallyes and indices
 filtered_valley_indices = filtered_valley_indices(min_indices);
 
-%% 4. Calculate the tempurature sum for each day of year
-% Initialize an array to store the data of temperature sum
-cumulative_temperatures = [];
 
-% Calculate the temperature sum for each year
-unique_years = unique(years);
-for i = 1:numel(unique_years)
-    year = unique_years(i);
-    year_indices = find(years == year);
-
-    Ta_year = V(31).Val(year_indices);
-    cumulative_temperatures_year = cumsum(Ta_year)/NstepDay;
-    cumulative_temperatures = [cumulative_temperatures,cumulative_temperatures_year'];
-end
-
-%% 5. Determine the day for sensonal start and end
+%% 4. Determine the day for sensonal start and end
 % Set the percentage threshold for the value increase
 threshold_percentage = wofostpar.THRESHOLD; % Adjust this value according to your needs
 
@@ -162,7 +148,7 @@ for i = 1:length(filtered_peak_indices)
 end
 
 
-%% 4. Update the crop parameters
+%% 5. Update the crop parameters
 % retrieval to the hour steps
 CSTART = indices_peak_left*NstepDay;
 CEND   = indices_peak_right*NstepDay;
@@ -201,10 +187,8 @@ scatter(filtered_valley_indices,filtered_valleys,'black','*');
 scatter(CSTART/NstepDay,lai_data(CSTART/NstepDay),'red','s','filled');
 scatter(CEND/NstepDay,lai_data(CEND/NstepDay),'black','s','filled');
 ylabel('LAI (m^3/m^3)')
+legend('Original Data','HANTS Data','LAI Peaks','LAI Valleys','Start Point','End Point');
+hold off;
 
-yyaxis right;
-plot(ts,cumulative_temperatures(tday),'red');
-legend('Original Data','HANTS Data','LAI Peaks','LAI Valleys','Start Point','End Point','Temperature Sum');
-ylabel('Cumulated temperature (^oC)')
 end
 

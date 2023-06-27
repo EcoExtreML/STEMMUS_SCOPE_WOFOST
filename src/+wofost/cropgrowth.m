@@ -276,9 +276,9 @@ crop_output(KT,6) = wrt;                     % Dry matter of root
 crop_output(KT,7) = wlv;                     % Dry matter of leaves
 crop_output(KT,8) = wst;                     % Dry matter of stem
 crop_output(KT,9) = wso;                     % Dry matter of organ
-crop_output(KT,10) = dwrt;                     % Dry matter of leaves
-crop_output(KT,11) = dwlv;                     % Dry matter of stem
-crop_output(KT,12) = dwst;                     % Dry matter of organ
+crop_output(KT,10) = dwrt;                     % Dry matter of root
+crop_output(KT,11) = dwlv;                     % Dry matter of leaves
+crop_output(KT,12) = dwst;                     % Dry matter of stem
 end
 
 

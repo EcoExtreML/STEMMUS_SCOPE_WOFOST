@@ -77,6 +77,7 @@ end
 % ydvs = crop_output(:,2);
 % plot(x,ydvs,'k','LineWidth',1.5);
 
+
 x_sim  = 1:1:Dur_tot;
 LAI_obs = V(22).Val(1:Dur_tot);
 %PH_obs  = V(23).Val;
