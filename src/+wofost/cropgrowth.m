@@ -257,15 +257,6 @@ elseif Anet_sum>=0 && Anet>=0
 end
 
 
-% Anet_sum = Anet_sum + Anet;    % assume LAI not changed with the respiration 
-% if Anet_sum < 0 && KT>1
-%     lai_old = crop_output(KT-1,3);
-%     lai = max(lai,lai_old);
-% elseif Anet_sum>=0 && Anet>=0
-%     Anet_sum = 0;
-% end
-
-
 %% 8. integrals of the crop
 crop_output(KT,1) = xyt.t(KT,1);             % Day of the year
 crop_output(KT,2) = dvs;                     % Development of stage

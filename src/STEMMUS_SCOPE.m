@@ -406,7 +406,7 @@ spectral.IwlF = (640:850)-399;
 [rho,tau,rs] = deal(zeros(nwlP + nwlT,1));
 
 %% 11. Define crop growth parameters
-Dur_tot = 9000;
+Dur_tot = 52560;
 options.calc_vegetation_dynamic = 1;
 
 wofostpar = wofost.WofostRead();
@@ -541,7 +541,7 @@ for i = 1:1:Dur_tot
     if options.simulation == 1, vi(vmax>1) = k; end
     if options.simulation == 0, vi(vmax==telmax) = k; end
     
-    % update the wofost parameters if using the extracted parameter from LAI time series
+    % update the wofost parameters if using the extracted parameter from LAI time series and tempreature sum 
     if wofostpar.PARSCHEME == 1 || wofostpar.PARSCHEME == 2
        if KT == 1
            nSeasions = 1;     % initilize crop growth seasions
@@ -713,6 +713,15 @@ for i = 1:1:Dur_tot
         crop_output(KT,3) = canopy.LAI;              % LAI
         crop_output(KT,4) = canopy.hc;               % Plant height
         crop_output(KT,5) = sfactor;                 % Water stress
+    end
+
+    % Smooth the Modis data and LAI simulation at the end stage of crop growth
+    if options.calc_vegetation_dynamic == 1  && KT == (wofostpar.CEND +1)
+        numPoints  = 24/wofostpar.TSTEP*10;    % Interpolate the last 10 days of the simulation
+        startValue = crop_output(KT-numPoints,3);
+        endValue   = crop_output(KT,3);
+
+        crop_output((KT-numPoints+1):KT,3) = linspace(startValue, endValue, numPoints);
     end
 
     %%
