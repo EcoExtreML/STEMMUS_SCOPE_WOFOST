@@ -47,12 +47,13 @@ for KT = 1:1:Dur_tot
     % Smooth the Modis data and LAI simulation at the end stage of crop growth for multiple growth seasons
     if options.calc_vegetation_dynamic == 1  && wofostpar.PARSCHEME ~= 0
         
-        if KT == 1                                  % Initilize the interpolation period (i.e., 10 days)
+        if KT == wofostpar.CSTART                   % Initilize the interpolation period
             numPoints  = 24/wofostpar.TSTEP*10;                     
-        elseif KT == (wofostpar.CEND - numPoints)   % calcultate the interpolation value of LAI
+        elseif KT == (wofostpar.CEND - numPoints)   % Initilize the interpolation period
             startValue = crop_output(KT,3);
             endValue   = V(22).Val(wofostpar.CEND);
             laiSmooth  = linspace(startValue, endValue, numPoints+1);
+
         elseif KT > (wofostpar.CEND - numPoints) && KT <= wofostpar.CEND
             crop_output(KT,3) = laiSmooth(KT+numPoints-wofostpar.CEND+1);
         end

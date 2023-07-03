@@ -715,16 +715,17 @@ for i = 1:1:Dur_tot
         crop_output(KT,5) = sfactor;                 % Water stress
     end
 
-    % Smooth the Modis data and LAI simulation at the end stage of crop growth for multiple growth seasons
-    if options.calc_vegetation_dynamic == 1  && wofostpar.PARSCHEME ~= 0
-        
-        if KT == 1                                  % Initilize the interpolation period (i.e., last 10 days before CSTART)
-            numPoints  = 24/wofostpar.TSTEP*10;                     
-        elseif KT == (wofostpar.CEND - numPoints)   % calcultate the interpolation value of LAI
+    % Smooth the Modis data and LAI simulation at the end stage of crop
+    % growth for multiple growth seasons
+    if options.calc_vegetation_dynamic == 1  && wofostpar.PARSCHEME ~= 0  && KT == wofostpar.CSTART
+        numPoints  = 24/wofostpar.TSTEP*10;    % Interpolate the last 10 days of the simulation       
+
+        if KT == (wofostpar.CEND - numPoints) 
             startValue = crop_output(KT,3);
             endValue   = V(22).Val(wofostpar.CEND);
-            laiSmooth  = linspace(startValue, endValue, numPoints+1);
-        elseif KT > (wofostpar.CEND - numPoints) && KT <= wofostpar.CEND % substitute the lai data
+            laiSmooth  = linspace(startValue, endValue, numPoints);
+
+        elseif KT >= (wofostpar.CEND - numPoints) && KT <= wofostpar.CEND
             crop_output(KT,3) = laiSmooth(KT+numPoints-wofostpar.CEND+1);
         end
     end
