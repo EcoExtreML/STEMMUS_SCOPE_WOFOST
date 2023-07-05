@@ -78,11 +78,16 @@ for i = 1:numel(unique_years)
 
     CSTART_index = year_indices(CSTART_year(1));
     CPEAK_index  = year_indices(CPEAK_year(1));
-    CEND_index   = year_indices(CEND_year(1));
+    if isempty(CEND_year)
+        CEND_index   = year_indices(end);
+    else
+        CEND_index   = year_indices(CEND_year(1));
+    end
 
     CSTART       = [CSTART,CSTART_index];
     CPEAK        = [CPEAK,CPEAK_index];
     CEND         = [CEND,CEND_index];
+    
 end
 
 %% 4. Update the crop parameters

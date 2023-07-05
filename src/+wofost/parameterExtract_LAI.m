@@ -38,7 +38,7 @@ tday  = NstepDay: NstepDay: ndata;  % decrease the time step to day step
 
 ni    = length(tday);               % total number of actual samples of the time series
 nb    = ni;                         % length of the base period, measured in virtual samples
-nf    = 50;                         % number of frequencies to be considered above the zero frequency
+nf    = wofostpar.NFREQUENCY;       % number of frequencies to be considered above the zero frequency
 ts    = 1:ni;                       % array of size ni of time sample indicators
 y     = LAItable(tday,2);           % array of input sample values (e.g. NDVI values)
 HiLo  = "none";                     % high or low outliers
@@ -111,7 +111,6 @@ threshold_percentage = wofostpar.THRESHOLD; % Adjust this value according to you
 % Initialize an array to store the indices that meet the threshold condition
 indices_peak_left  = [];
 indices_peak_right = [];
-Lai_original = LAItable(tday,2); 
 
 % judge whether the valley index smaller than peak index at start
 if filtered_valley_indices(1) > filtered_peak_indices(1)
@@ -127,19 +126,19 @@ filtered_valleys = lai_data(filtered_valley_indices);
 for i = 1:length(filtered_peak_indices)
     % determint the index and value of peaks and valleys
     peak_index         = filtered_peak_indices(i);
-    peak_value         = Lai_original(peak_index);
+    peak_value         = lai_data(peak_index);
 
     valley_index_left  = filtered_valley_indices(i);
     valley_index_right = filtered_valley_indices(i+1);
-    valley_value_left  = Lai_original(valley_index_left);
-    valley_value_right = Lai_original(valley_index_right);
+    valley_value_left  = lai_data(valley_index_left);
+    valley_value_right = lai_data(valley_index_right);
 
     % Calculate the threshold value
     threshold_value_start = valley_value_left  + (peak_value-valley_value_left)*threshold_percentage;
     threshold_value_end   = valley_value_right + (peak_value-valley_value_right)*threshold_percentage;
 
     % Determine the index that crop starts or ends to grow up 
-    lai_growth_seasion = Lai_original(valley_index_left:valley_index_right);
+    lai_growth_seasion    = lai_data(valley_index_left:valley_index_right);
     above_threshold_left  = find(lai_growth_seasion > threshold_value_start)+valley_index_left-1;
     above_threshold_right = find(lai_growth_seasion > threshold_value_end)+valley_index_left-1;
 
