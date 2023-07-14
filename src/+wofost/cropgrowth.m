@@ -68,6 +68,11 @@ else
     dvs    =  dvs + dtsum*delt/wofostpar.TSUMAM;
 end
 
+if dvs >=2
+    dvs = 1.99;
+    fprintf("Warning: DVS>2.0 when KT=%d, but CEND=%d\n",KT,wofostpar.CEND);
+end
+
 %% 2. dry matter increase
 frtb  =   wofostpar.FRTB;
 fltb  =   wofostpar.FLTB;

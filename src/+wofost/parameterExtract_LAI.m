@@ -38,7 +38,7 @@ tday  = NstepDay: NstepDay: ndata;  % decrease the time step to day step
 
 ni    = length(tday);               % total number of actual samples of the time series
 nb    = ni;                         % length of the base period, measured in virtual samples
-nf    = wofostpar.NFREQUENCY;       % number of frequencies to be considered above the zero frequency
+nf    = 1:100;                          % number of frequencies to be considered above the zero frequency
 ts    = 1:ni;                       % array of size ni of time sample indicators
 y     = LAItable(tday,2);           % array of input sample values (e.g. NDVI values)
 HiLo  = "none";                     % high or low outliers
@@ -48,7 +48,18 @@ fet   = 0.1;                        % fit error tolerance
 dod   = 1;                          % degree of overdeterminedness
 delta = 0.1;                        % small positive number (e.g. 0.1) to suppress high amplitudes
 
-[amp,phi,yr]=wofost.HANTS(ni,nb,nf,y,ts,HiLo,low,high,fet,dod,delta);
+% find the optimized nf parameter
+rmseSeries = [];
+for inf = nf
+    [amp,phi,y_model] = wofost.HANTS(ni,nb,inf,y,ts,HiLo,low,high,fet,dod,delta);
+    rmse    = sqrt(mean((y_model - y).^2));
+    rmseSeries = [rmseSeries,rmse];
+end
+[minValue, minIndex] = min(rmseSeries);
+nf_opt = nf(minIndex);
+
+% output the optimal hants smooth results
+[amp,phi,yr]=wofost.HANTS(ni,nb,nf_opt,y,ts,HiLo,low,high,fet,dod,delta);
 
 %% 3. Find the peak and valley value of LAI for all growth seasons
 lai_data = yr;
@@ -103,6 +114,40 @@ min_indices(end+1) = group_start_index + min_index - 1;
 filtered_valleys = min_values; % Update the filtered vallyes and indices
 filtered_valley_indices = filtered_valley_indices(min_indices);
 
+% find out the maximum peaks if some of them are too closed
+min_peak_distance = 1/2 * mean(diff(filtered_valley_indices));   % the threshold is set as the 1/2 distance of vallyes
+groups = {}; % Store groups
+max_values = []; % Store minimum values
+max_indices = []; % Store indices of minimum values
+group_start_index = 1; % Initialize the start index of the first group
+
+for i = 2:length(filtered_peaks)
+    distance = filtered_peak_indices(i) - filtered_peak_indices(i-1);
+    if distance > min_peak_distance
+       group_end_index = i - 1;
+       group_values = filtered_peaks(group_start_index:group_end_index);
+       groups{end+1} = group_values;
+          
+       % Calculate the minimum value and its index within the current group
+       [max_value, max_index] = max(group_values);
+        
+       % Store the minimum value and its index
+       max_values(end+1) = max_value;
+       max_indices(end+1) = group_start_index + max_index - 1;
+        
+       % Update the start index for the next group
+       group_start_index = i;
+    end
+end
+
+group_values = filtered_peaks(group_start_index:end); % Process the last group
+groups{end+1} = group_values;
+[max_value, max_index] = max(group_values);
+max_values(end+1) = max_value;
+max_indices(end+1) = group_start_index + min_index - 1;
+
+filtered_peaks = max_values; % Update the filtered vallyes and indices
+filtered_peak_indices = filtered_peak_indices(max_indices);
 
 %% 4. Determine the day for sensonal start and end
 % Set the percentage threshold for the value increase
@@ -176,7 +221,7 @@ wofostpar.TSUMAMSeries = TSUMAM;
 wofostpar.LAIEMSeries  = LAIEM;
 
 %% plotting
-ax1 = subplot(2,1,1);
+ax1 = subplot(1,1,1);
 plot(y,'b.-');
 hold on;
 plot(yr,'g.-');

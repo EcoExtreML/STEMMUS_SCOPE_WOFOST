@@ -406,7 +406,7 @@ spectral.IwlF = (640:850)-399;
 [rho,tau,rs] = deal(zeros(nwlP + nwlT,1));
 
 %% 11. Define crop growth parameters
-Dur_tot = 35040;
+Dur_tot = 26304;
 options.calc_vegetation_dynamic = 1;
 
 wofostpar = wofost.WofostRead();

@@ -91,7 +91,7 @@ for KT = 1:1:Dur_tot
 % ydvs = crop_output(:,2);
 % plot(x,ydvs,'k','LineWidth',1.5);
 
-
+ax = subplot(1,1,1);
 x_sim  = 1:1:Dur_tot;
 LAI_obs = V(22).Val(1:Dur_tot);
 %PH_obs  = V(23).Val;
@@ -106,5 +106,7 @@ plot(x_sim,LAI_sim,'k',x_sim,LAI_obs,'r','LineWidth',1.5);
 text(100,1.9,'RMSE = '+string(LAI_rmse), 'FontSize', 12, 'Color', 'k');
 text(100,2.2,'R2 = '+string(LAI_r2), 'FontSize', 12, 'Color', 'k');
 %plot(x_sim,PH_sim,'k',x_sim,PH_obs,'r','LineWidth',1.5);
+
+hold off;
 end
 
