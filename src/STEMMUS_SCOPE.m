@@ -406,7 +406,7 @@ spectral.IwlF = (640:850)-399;
 [rho,tau,rs] = deal(zeros(nwlP + nwlT,1));
 
 %% 11. Define crop growth parameters
-Dur_tot = 26304;
+Dur_tot = 52608;
 options.calc_vegetation_dynamic = 1;
 
 wofostpar = wofost.WofostRead();
@@ -691,14 +691,14 @@ for i = 1:1:Dur_tot
     end
     
     %% Adjust crop parameters for debugging process
-%     wofostpar = wofost.WofostRead();
-%     if wofostpar.PARSCHEME == 1
-%         wofostpar = wofost.parameterExtract_LAI(wofostpar,V,F,path_input);
-%     elseif wofostpar.PARSCHEME == 2
-%         wofostpar = wofost.parameterExtract_TemSum(wofostpar,V,F,path_input);
-%     end
-% 
-%    [crop_output] = wofost.wofostdebug(wofostpar,V,xyt,options);
+    wofostpar = wofost.WofostRead();
+    if wofostpar.PARSCHEME == 1
+        wofostpar = wofost.parameterExtract_LAI(wofostpar,V,F,path_input);
+    elseif wofostpar.PARSCHEME == 2
+        wofostpar = wofost.parameterExtract_TemSum(wofostpar,V,F,path_input);
+    end
+
+   [crop_output] = wofost.wofostdebug(wofostpar,V,xyt,options);
 
     %% start to simulate the vegetation growth process 
     if options.calc_vegetation_dynamic == 1  && KT >= wofostpar.CSTART && KT <= wofostpar.CEND          

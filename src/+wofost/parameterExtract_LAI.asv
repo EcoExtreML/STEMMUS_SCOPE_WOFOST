@@ -198,7 +198,6 @@ initial_threshold = lai_data(filtered_valley_indices(2))+(lai_data(filtered_peak
 if initial_lai > initial_threshold
     indices_peak_left = indices_peak_left(2:end);
     indices_peak_right = indices_peak_right(2:end);
-    filtered_peaks = filtered_peaks(2:end);
     filtered_peak_indices = filtered_peak_indices(2:end);
 end
 
