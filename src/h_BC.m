@@ -34,8 +34,8 @@ elseif NBCh==2
 else
     [Rn_SOIL,Evap,EVAP,Trap,r_a_SOIL,Resis_a,Srt]= Evap_Cal(DeltZ,TIME,RHOV,Ta,HR_a,U,Theta_LL,Ts,Rv,g,NL,NN,KT,hh,rwuef,Theta_UU,Rn,T,TT,Gvc,Rns,Srt);
     
-%     Precip_msr(KT)=min(Precip_msr(KT),Ks0/(3600*24)*DELT*10);
-%     Precip_msr(KT)=min(Precip_msr(KT),theta_s0*50-DeltZ(NL-3:NL)*Theta_UU(NL-3:NL,1)*10);
+    Precip_msr(KT)=min(Precip_msr(KT),Ks0/(3600*24)*DELT*10);
+    Precip_msr(KT)=min(Precip_msr(KT),theta_s0*50-DeltZ(NL-3:NL)*Theta_UU(NL-3:NL,1)*10);
     
     if Ts(KT) >0
     Precip(KT)=Precip_msr(KT)*0.1/DELT;

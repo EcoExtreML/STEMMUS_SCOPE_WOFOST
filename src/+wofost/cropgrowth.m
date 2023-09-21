@@ -68,6 +68,11 @@ else
     dvs    =  dvs + dtsum*delt/wofostpar.TSUMAM;
 end
 
+if dvs >=2
+    dvs = 1.99;
+    fprintf("Warning: DVS>2.0 when KT=%d, but CEND=%d\n",KT,wofostpar.CEND);
+end
+
 %% 2. dry matter increase
 frtb  =   wofostpar.FRTB;
 fltb  =   wofostpar.FLTB;
@@ -257,15 +262,6 @@ elseif Anet_sum>=0 && Anet>=0
 end
 
 
-% Anet_sum = Anet_sum + Anet;    % assume LAI not changed with the respiration 
-% if Anet_sum < 0 && KT>1
-%     lai_old = crop_output(KT-1,3);
-%     lai = max(lai,lai_old);
-% elseif Anet_sum>=0 && Anet>=0
-%     Anet_sum = 0;
-% end
-
-
 %% 8. integrals of the crop
 crop_output(KT,1) = xyt.t(KT,1);             % Day of the year
 crop_output(KT,2) = dvs;                     % Development of stage
@@ -276,9 +272,9 @@ crop_output(KT,6) = wrt;                     % Dry matter of root
 crop_output(KT,7) = wlv;                     % Dry matter of leaves
 crop_output(KT,8) = wst;                     % Dry matter of stem
 crop_output(KT,9) = wso;                     % Dry matter of organ
-crop_output(KT,10) = dwrt;                     % Dry matter of leaves
-crop_output(KT,11) = dwlv;                     % Dry matter of stem
-crop_output(KT,12) = dwst;                     % Dry matter of organ
+crop_output(KT,10) = dwrt;                     % Dry matter of root
+crop_output(KT,11) = dwlv;                     % Dry matter of leaves
+crop_output(KT,12) = dwst;                     % Dry matter of stem
 end
 
 

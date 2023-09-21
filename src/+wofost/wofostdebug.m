@@ -1,4 +1,4 @@
-function [crop_output] = wofostdebug(wofostpar,V,xyt,fluxname,cropname)
+function [crop_output] = wofostdebug(wofostpar,V,xyt,options)
 % WOFOSTDEGUG A debugging programe for crop growth simulation
 % Input: WofostPar;
 %        Anet;
@@ -8,17 +8,56 @@ function [crop_output] = wofostdebug(wofostpar,V,xyt,fluxname,cropname)
 %% 0. global variables
 global KT sfactor Dur_tot crop_output
 
-%% 1. crop growth simulation
+%% 1. crop growth initilization
+fluxname = '../../input/Wofost/fluxes.csv';
+cropname = '../../input/Wofost/LAI_.dat';
 fluxdata = csvread(fluxname,2, 0);
 cropdata = readtable(cropname);
 
-for n = wofostpar.CSTART:wofostpar.CEND
-    KT = n ;
-    Anet = fluxdata(n,11);
-    meteo.Ta = V(31).Val(n);
-    sfactor = fluxdata(n,29);
-    [crop_output] = wofost.cropgrowth(meteo,wofostpar,Anet,xyt);
-end
+%% 2. crop growth simulation
+for KT = 1:1:Dur_tot 
+
+    % update the wofost parameters if using the extracted parameter from LAI time series
+    if wofostpar.PARSCHEME == 1  || wofostpar.PARSCHEME == 2
+       if KT == 1
+           nSeasions = 1;     % initilize crop growth seasions
+           [wofostpar,nSeasions] = wofost.parameter_update(wofostpar,KT,nSeasions); % initilize crop growth parameters
+       elseif KT == wofostpar.CSTARTSeries(nSeasions)
+           [wofostpar,nSeasions] = wofost.parameter_update(wofostpar,KT,nSeasions);
+       end
+    end
+    
+    % calculate the growth of plant
+    if options.calc_vegetation_dynamic == 1  && KT >= wofostpar.CSTART && KT <= wofostpar.CEND          
+        Anet = fluxdata(KT,11);
+        if isnan(Anet) || Anet < -2                       % limit value of Anet
+            Anet = 0;
+            fluxes.Actot = Anet;
+        end
+        meteo.Ta = V(31).Val(KT);
+        sfactor = fluxdata(KT,29);
+        [crop_output] = wofost.cropgrowth(meteo,wofostpar,Anet,xyt);
+     else
+        crop_output(KT,1) = xyt.t(KT,1);                % Day of the year
+        crop_output(KT,3) = V(22).Val(KT);              % LAI
+        crop_output(KT,4) = V(23).Val(KT);              % Plant height
+        crop_output(KT,5) = sfactor;                    % Water stress
+    end
+
+    % Smooth the Modis data and LAI simulation at the end stage of crop growth for multiple growth seasons
+    if options.calc_vegetation_dynamic == 1  && wofostpar.PARSCHEME ~= 0
+        
+        if KT == 1                                  % Initilize the interpolation period (i.e., 10 days)
+            numPoints  = 24/wofostpar.TSTEP*10;                     
+        elseif KT == (wofostpar.CEND - numPoints)   % calcultate the interpolation value of LAI
+            startValue = crop_output(KT,3);
+            endValue   = V(22).Val(wofostpar.CEND);
+            laiSmooth  = linspace(startValue, endValue, numPoints+1);
+        elseif KT > (wofostpar.CEND - numPoints) && KT <= wofostpar.CEND
+            crop_output(KT,3) = laiSmooth(KT+numPoints-wofostpar.CEND+1);
+        end
+    end
+ end
 
 %% 2. plot figure
 % x = 1:1:Dur_tot;
@@ -52,10 +91,11 @@ end
 % ydvs = crop_output(:,2);
 % plot(x,ydvs,'k','LineWidth',1.5);
 
-x_sim  = 1:1:wofostpar.CEND;
-LAI_obs = V(22).Val(1:wofostpar.CEND);
+ax = subplot(1,1,1);
+x_sim  = 1:1:Dur_tot;
+LAI_obs = V(22).Val(1:Dur_tot);
 %PH_obs  = V(23).Val;
-LAI_sim = crop_output(1:wofostpar.CEND,3);
+LAI_sim = crop_output(1:Dur_tot,3);
 %PH_sim  = crop_output(:,4);
 
 LAI_rmse = sqrt(mean((LAI_obs-LAI_sim).^2));
@@ -66,5 +106,7 @@ plot(x_sim,LAI_sim,'k',x_sim,LAI_obs,'r','LineWidth',1.5);
 text(100,1.9,'RMSE = '+string(LAI_rmse), 'FontSize', 12, 'Color', 'k');
 text(100,2.2,'R2 = '+string(LAI_r2), 'FontSize', 12, 'Color', 'k');
 %plot(x_sim,PH_sim,'k',x_sim,PH_obs,'r','LineWidth',1.5);
+
+hold off;
 end
 

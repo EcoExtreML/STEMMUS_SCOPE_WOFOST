@@ -1,13 +1,14 @@
 
-%% STEMMUS-SCOPE.m (script)
+%% STEMMUS-SCOPE-WOFOST.m (script)
 
-%     STEMMUS-SCOPE is a model for Integrated modeling of canopy photosynthesis, fluorescence, 
-%     and the transfer of energy, mass, and momentum in the soil–plant–atmosphere continuum 
+%     STEMMUS-SCOPE-WOFOST is a model for Integrated modeling of canopy
+%     photosynthesis, fluorescence, plant growth and the transfer
+%     of energy, mass, and momentum in the soil–plant–atmosphere continuum 
 %
 %     Version: 1.0.1
 %
-%     Copyright (C) 2021  Yunfei Wang, Lianyu Yu, Yijian Zeng, Christiaan Van der Tol, Bob Su
-%     Contact: y.wang-3@utwente.nl; l.yu@utwente.nl; y.zeng@utwente.nl; c.vandertol@utwente.nl; z.su@utwente.nl 
+%     Copyright (C) 2023  Danyang Yu, Yijian Zeng,  Bob Su
+%     Contact: d.yu@utwente.nl; y.zeng@utwente.nl; z.su@utwente.nl 
 %
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -406,16 +407,18 @@ spectral.IwlF = (640:850)-399;
 [rho,tau,rs] = deal(zeros(nwlP + nwlT,1));
 
 %% 11. Define crop growth parameters
-Dur_tot = 9000;
+Dur_tot = 52608;
 options.calc_vegetation_dynamic = 1;
 
 wofostpar = wofost.WofostRead();
 crop_output = zeros(Dur_tot,12);
 wofostpar.TSTEP = DELT/3600;   % make sure the consistent of the time step (hour)
 
-% chose parameter scheme to use the extracted parameters from LAI time series
+% chose parameter scheme to use the extracted parameters from LAI time series or based on temperature sum
 if wofostpar.PARSCHEME == 1
-    wofostpar = wofost.parameter_extract(wofostpar,V,F,path_input);
+    wofostpar = wofost.parameterExtract_LAI(wofostpar,V,F,path_input);
+elseif wofostpar.PARSCHEME == 2
+    wofostpar = wofost.parameterExtract_TemSum(wofostpar,V,F,path_input);
 end
 
 %% 12. load time series data
@@ -539,8 +542,8 @@ for i = 1:1:Dur_tot
     if options.simulation == 1, vi(vmax>1) = k; end
     if options.simulation == 0, vi(vmax==telmax) = k; end
     
-    % update the wofost parameters if using the extracted parameter from LAI time series
-    if wofostpar.PARSCHEME == 1
+    % update the wofost parameters if using the extracted parameter from LAI time series and tempreature sum 
+    if wofostpar.PARSCHEME == 1 || wofostpar.PARSCHEME == 2
        if KT == 1
            nSeasions = 1;     % initilize crop growth seasions
            [wofostpar,nSeasions] = wofost.parameter_update(wofostpar,KT,nSeasions); % initilize crop growth parameters
@@ -688,21 +691,24 @@ for i = 1:1:Dur_tot
         end           
     end
     
-    % start to simulate the vegetation growth process 
+    %% Adjust crop parameters for debugging process
+    wofostpar = wofost.WofostRead();
+    if wofostpar.PARSCHEME == 1
+        wofostpar = wofost.parameterExtract_LAI(wofostpar,V,F,path_input);
+    elseif wofostpar.PARSCHEME == 2
+        wofostpar = wofost.parameterExtract_TemSum(wofostpar,V,F,path_input);
+    end
+
+   [crop_output] = wofost.wofostdebug(wofostpar,V,xyt,options);
+
+    %% start to simulate the vegetation growth process 
     if options.calc_vegetation_dynamic == 1  && KT >= wofostpar.CSTART && KT <= wofostpar.CEND          
         Anet = fluxes.Actot;
         if isnan(Anet) || Anet < -2                       % limit value of Anet
             Anet = 0;
             fluxes.Actot = Anet;
         end
-        [crop_output] = wofost.cropgrowth(meteo,wofostpar,Anet,xyt);
-             
-         %% Adjust crop parameters for debugging process
-%         wofostpar = wofost.WofostRead();
-%         fluxname = '../../input/Wofost/fluxes.csv';
-%         cropname = '../../input/Wofost/LAI_.dat';
-%         [crop_output] = wofost.wofostdebug(wofostpar,V,xyt,fluxname,cropname);
-
+        [crop_output] = wofost.cropgrowth(meteo,wofostpar,Anet,xyt);            
     else
         crop_output(KT,1) = xyt.t(KT,1);             % Day of the year
         crop_output(KT,3) = canopy.LAI;              % LAI
@@ -710,7 +716,21 @@ for i = 1:1:Dur_tot
         crop_output(KT,5) = sfactor;                 % Water stress
     end
 
-    
+    % Smooth the Modis data and LAI simulation at the end stage of crop growth for multiple growth seasons
+    if options.calc_vegetation_dynamic == 1  && wofostpar.PARSCHEME ~= 0
+        
+        if KT == 1                                  % Initilize the interpolation period (i.e., last 10 days before CSTART)
+            numPoints  = 24/wofostpar.TSTEP*10;                     
+        elseif KT == (wofostpar.CEND - numPoints)   % calcultate the interpolation value of LAI
+            startValue = crop_output(KT,3);
+            endValue   = V(22).Val(wofostpar.CEND);
+            laiSmooth  = linspace(startValue, endValue, numPoints+1);
+        elseif KT > (wofostpar.CEND - numPoints) && KT <= wofostpar.CEND % substitute the lai data
+            crop_output(KT,3) = laiSmooth(KT+numPoints-wofostpar.CEND+1);
+        end
+    end
+
+    %%
     if options.simulation==2 && telmax>1, vi  = helpers.count(nvars,vi,vmax,1); end
      if KT==1 
         if isreal(fluxes.Actot)&&isreal(thermal.Tsave)&&isreal(fluxes.lEstot)&&isreal(fluxes.lEctot)
