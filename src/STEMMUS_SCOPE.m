@@ -1,13 +1,14 @@
 
-%% STEMMUS-SCOPE.m (script)
+%% STEMMUS-SCOPE-WOFOST.m (script)
 
-%     STEMMUS-SCOPE is a model for Integrated modeling of canopy photosynthesis, fluorescence, 
-%     and the transfer of energy, mass, and momentum in the soil–plant–atmosphere continuum 
+%     STEMMUS-SCOPE-WOFOST is a model for Integrated modeling of canopy
+%     photosynthesis, fluorescence, plant growth and the transfer
+%     of energy, mass, and momentum in the soil–plant–atmosphere continuum 
 %
 %     Version: 1.0.1
 %
-%     Copyright (C) 2021  Yunfei Wang, Lianyu Yu, Yijian Zeng, Christiaan Van der Tol, Bob Su
-%     Contact: y.wang-3@utwente.nl; l.yu@utwente.nl; y.zeng@utwente.nl; c.vandertol@utwente.nl; z.su@utwente.nl 
+%     Copyright (C) 2023  Danyang Yu, Yijian Zeng,  Bob Su
+%     Contact: d.yu@utwente.nl; y.zeng@utwente.nl; z.su@utwente.nl 
 %
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
